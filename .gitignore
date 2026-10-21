@@ -1,12 +1,18 @@
+# Python / local environment
 .venv/
+venv/
 __pycache__/
 *.pyc
 .DS_Store
-# customer data and secrets - never commit
+
+# Customer data and secrets - never commit
 assessment*.json
 rh-discovery-*.json
 *.xlsx
+*.csv
 targets.json
 hosts.txt
 *.pem
-id_*
+*.key
+id_rsa*
+id_ed25519*

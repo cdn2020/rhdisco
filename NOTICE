@@ -1,0 +1,24 @@
+RH Discovery Tool (rhdisco)
+Copyright 2026 Anish Xavier
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This project is not affiliated with, sponsored by or endorsed by Red Hat, Inc.
+or Broadcom Inc. Red Hat, Red Hat Enterprise Linux, RHEL, OpenShift and
+Red Hat Virtualization are trademarks or registered trademarks of Red Hat, Inc.
+in the United States and other countries. VMware, vSphere and vCenter are
+trademarks of Broadcom Inc. and/or its subsidiaries. All other trademarks are
+the property of their respective owners.
+
+Subscription and licensing figures produced by this tool are indicative
+estimates only. They are not an official Red Hat or VMware entitlement count
+and must be validated against the applicable subscription agreements and
+current product terms.
+
+Third-party dependencies (installed separately via requirements.txt) are
+distributed under their own licenses:
+  Flask      - BSD-3-Clause
+  requests   - Apache-2.0
+  paramiko   - LGPL-2.1
+  pyVmomi    - Apache-2.0
+  openpyxl   - MIT

@@ -2,6 +2,8 @@
 
 A small local web tool that inventories an estate for **Red Hat subscription and licensing assessments**:
 
+Not affiliated with or endorsed by Red Hat or Broadcom/VMware. Red Hat, OpenShift and RHEL are trademarks of Red Hat, Inc.; VMware and vCenter are trademarks of Broadcom
+
 | Source | Method | What is collected |
 |---|---|---|
 | **Red Hat OpenShift** | OpenShift / Kubernetes REST API (bearer token) | Cluster version, platform, cluster ID; every node with its role (**Master, Infra, Storage (ODF), Worker**), CPU, memory, disks, NICs, hardware vendor/model/serial, physical vs virtual; installed operators; ODF raw capacity |

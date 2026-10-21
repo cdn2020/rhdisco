@@ -1,0 +1,17 @@
+{
+  "meta": { "customer": "Example Bank" },
+  "openshift": [
+    { "name": "prod-ocp", "api_url": "https://api.prod.example.com:6443", "token": "env:OCP_PROD_TOKEN", "verify_tls": false,
+      "node_ssh": { "enabled": false, "user": "core", "key": "file:~/.ssh/ocp_core_id" } }
+  ],
+  "vcenter": [
+    { "name": "DC1-vcsa", "host": "vcsa01.example.com", "username": "svc-readonly@vsphere.local", "password": "env:VC_PASSWORD", "verify_tls": false }
+  ],
+  "rhv": [
+    { "name": "RHV-DC2", "url": "rhvm.example.com", "username": "svc-readonly@internal", "password": "env:RHV_PASSWORD", "verify_tls": false }
+  ],
+  "rhel": [
+    { "hosts_file": "hosts.txt", "username": "svc_discovery", "key": "file:~/.ssh/id_rsa", "sudo": true, "concurrency": 20,
+      "jump": { "host": "", "user": "", "port": 22 } }
+  ]
+}

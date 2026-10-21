@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Red Hat Discovery</title>
+<style>
+:root{
+  --bg:#f4f5f7; --panel:#ffffff; --panel2:#f9fafb; --text:#1b1d21; --muted:#5f6670; --line:#dfe2e6; --line2:#eceef1;
+  --accent:#c9190b; --accent-ink:#ffffff; --accent-soft:#fbeae8; --ok:#2e7d32; --warn:#b26a00; --err:#c62828;
+  --b-master:#5b3fa8; --b-infra:#1f65b8; --b-storage:#a06200; --b-worker:#2e7d32; --b-other:#5f6670;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --shadow: 0 1px 2px rgba(16,24,40,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121417; --panel:#1b1e23; --panel2:#20242a; --text:#e7e9ec; --muted:#9aa1ab; --line:#2f343b; --line2:#272b31;
+    --accent:#ff5a4a; --accent-ink:#1b1e23; --accent-soft:#3a1f1d; --ok:#66bb6a; --warn:#ffb74d; --err:#ef5350;
+    --b-master:#a993f0; --b-infra:#74aef2; --b-storage:#f0b860; --b-worker:#7cc47f; --b-other:#9aa1ab; --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121417; --panel:#1b1e23; --panel2:#20242a; --text:#e7e9ec; --muted:#9aa1ab; --line:#2f343b; --line2:#272b31;
+  --accent:#ff5a4a; --accent-ink:#1b1e23; --accent-soft:#3a1f1d; --ok:#66bb6a; --warn:#ffb74d; --err:#ef5350;
+  --b-master:#a993f0; --b-infra:#74aef2; --b-storage:#f0b860; --b-worker:#7cc47f; --b-other:#9aa1ab; --shadow:none;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI","Red Hat Text",Roboto,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+header{display:flex;align-items:center;gap:16px;padding:12px 24px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:650;font-size:16px;white-space:nowrap}
+.brand .mark{width:26px;height:26px;border-radius:6px;background:var(--accent);display:grid;place-items:center;color:var(--accent-ink);font-weight:800;font-size:13px}
+.brand small{font-weight:400;color:var(--muted);font-size:12px}
+header .spacer{flex:1}
+header .cust{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px}
+header .cust input{width:200px}
+nav.tabs{display:flex;gap:2px;padding:0 24px;background:var(--panel);border-bottom:1px solid var(--line);overflow-x:auto}
+nav.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:10px 14px;cursor:pointer;color:var(--muted);white-space:nowrap}
+nav.tabs button.on{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+nav.tabs .count{display:inline-block;min-width:18px;padding:0 6px;margin-left:6px;border-radius:9px;background:var(--line2);font-size:11px;color:var(--muted)}
+main{padding:20px 24px 60px;max-width:1600px;margin:0 auto}
+.view{display:none}.view.on{display:block}
+h2{font-size:15px;margin:0 0 12px;font-weight:650}
+h3{font-size:13px;margin:18px 0 8px;font-weight:650;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.grid3{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+@media (max-width:1500px){.grid3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:800px){.grid3{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;box-shadow:var(--shadow)}
+.card h2{display:flex;align-items:center;gap:8px}
+.card .sub{color:var(--muted);font-size:12.5px;margin:-6px 0 12px}
+label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+input[type=text],input[type=password],input[type=number],input[type=search],select,textarea{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--panel2)}
+textarea{font-family:var(--mono);font-size:12px;resize:vertical}
+input:focus,textarea:focus,select:focus{outline:2px solid color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:0;border-color:var(--accent)}
+.row{display:flex;gap:10px}.row>*{flex:1;min-width:0}
+.check{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--text)}
+.check input{margin:0}
+details.adv{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px}
+details.adv summary{cursor:pointer;color:var(--muted);font-size:12.5px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:6px;border:1px solid var(--line);background:var(--panel);cursor:pointer;font-size:13px;white-space:nowrap}
+.btn:hover{background:var(--panel2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.small{padding:3px 8px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:default}
+.actions{display:flex;gap:8px;margin-top:14px;align-items:center;flex-wrap:wrap}
+.hint{font-size:12px;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.kpi .v{font-size:26px;font-weight:650;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi .l{font-size:12.5px;color:var(--muted);margin-top:4px}
+.kpi .d{font-size:11.5px;color:var(--muted);margin-top:6px;border-top:1px solid var(--line2);padding-top:6px}
+.kpi.accent{border-left:3px solid var(--accent)}
+.tblwrap{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:18px}
+.tbltools{display:flex;gap:8px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--panel2);flex-wrap:wrap}
+.tbltools .ttl{font-weight:600;margin-right:auto}
+.tbltools input,.tbltools select{width:auto;min-width:180px;padding:4px 8px;font-size:12.5px}
+.scroll{overflow:auto;max-height:70vh}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{padding:6px 10px;text-align:left;border-bottom:1px solid var(--line2);white-space:nowrap;vertical-align:top}
+th{position:sticky;top:0;background:var(--panel);font-weight:600;color:var(--muted);cursor:pointer;user-select:none;z-index:1;border-bottom:1px solid var(--line)}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+th .arr{opacity:.6;font-size:10px}
+tbody tr:hover td{background:var(--panel2)}
+tr.exp td{background:var(--panel2);white-space:normal;padding:10px 16px 14px}
+td.tog{cursor:pointer;color:var(--muted);width:18px}
+tfoot td{font-weight:600;background:var(--panel2);border-top:1px solid var(--line)}
+.badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:600;border:1px solid currentColor;line-height:1.5}
+.b-Master,.b-Master\+Worker{color:var(--b-master)} .b-Infra{color:var(--b-infra)} .b-Storage{color:var(--b-storage)} .b-Worker{color:var(--b-worker)} .b-x{color:var(--b-other)}
+.ok{color:var(--ok)}.warn{color:var(--warn)}.err{color:var(--err)}.muted{color:var(--muted)}
+.mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:14px}
+.mini table{background:var(--panel);border:1px solid var(--line);border-radius:6px}
+.mini h4{margin:0 0 6px;font-size:12px;color:var(--muted)}
+.empty{padding:40px;text-align:center;color:var(--muted);background:var(--panel);border:1px dashed var(--line);border-radius:10px}
+.jobs{margin-top:18px}
+.job{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden}
+.job .jh{display:flex;gap:10px;align-items:center;padding:8px 12px;cursor:pointer}
+.job .jh .t{font-weight:600}
+.job pre{margin:0;max-height:240px;overflow:auto;padding:8px 12px;background:var(--panel2);border-top:1px solid var(--line);font:11.5px/1.5 var(--mono);white-space:pre-wrap}
+.job pre .warn{color:var(--warn)} .job pre .error{color:var(--err)}
+.spin{width:12px;height:12px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 0.8s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:16px;padding:3px 6px 3px 12px;background:var(--panel);font-size:12.5px}
+.chip button{border:0;background:var(--line2);border-radius:50%;width:20px;height:20px;cursor:pointer;line-height:1}
+.notes{margin:0;padding-left:18px;color:var(--muted);font-size:12.5px}
+.notes li{margin:3px 0}
+.clusterhead{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;margin:6px 0 12px}
+.clusterhead .n{font-size:16px;font-weight:650}
+.clusterhead span{color:var(--muted);font-size:12.5px}
+.banner{padding:10px 14px;border-radius:8px;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);margin-bottom:16px;font-size:13px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:1000px){.split{grid-template-columns:1fr}}
+.bar{height:8px;background:var(--line2);border-radius:4px;overflow:hidden;min-width:80px}
+.bar>i{display:block;height:100%;background:var(--accent)}
+@media (max-width:640px){header,nav.tabs,main{padding-left:16px;padding-right:16px}header .cust input{width:140px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><div class="mark">RH</div><div>Subscription Discovery<br><small>OpenShift · Virtualization · RHV · RHEL · vCenter</small></div></div>
+  <div class="spacer"></div>
+  <div class="cust">Customer <input type="text" id="customer" placeholder="Customer / engagement"></div>
+  <input type="file" id="loadFile" accept=".json" hidden>
+  <button class="btn" onclick="$('#loadFile').click()" title="Load a saved assessment JSON (from this UI or discover.py)">Load JSON</button>
+  <button class="btn" onclick="saveJSON()">Save JSON</button>
+  <button class="btn primary" onclick="exportXlsx()">Export Excel</button>
+  <button class="btn" id="themeBtn" title="Toggle light/dark theme">Theme</button>
+</header>
+<nav class="tabs" id="tabs">
+  <button data-v="discover" class="on">Discover</button>
+  <button data-v="summary">Subscription summary</button>
+  <button data-v="ocp">OpenShift <span class="count" id="c-ocp">0</span></button>
+  <button data-v="virt">OCP Virtualization <span class="count" id="c-virt">0</span></button>
+  <button data-v="vc">vCenter <span class="count" id="c-vc">0</span></button>
+  <button data-v="rhv">RHV <span class="count" id="c-rhv">0</span></button>
+  <button data-v="rhel">RHEL hosts <span class="count" id="c-rhel">0</span></button>
+</nav>
+<main>
+<!-- ============================ DISCOVER ============================ -->
+<section class="view on" id="v-discover">
+  <div class="grid3">
+    <div class="card" id="f-ocp">
+      <h2>Red Hat OpenShift</h2>
+      <div class="sub">Nodes, roles, CPU/memory/disk/NIC, operators, ODF and OpenShift Virtualization VMs via the API. A <code>cluster-reader</code> token is enough.</div>
+      <label>API URL</label><input type="text" name="api_url" placeholder="https://api.cluster.example.com:6443">
+      <label>Display name (optional)</label><input type="text" name="name" placeholder="prod-ocp-01">
+      <label>Bearer token <span class="hint">(oc whoami -t, or a service-account token)</span></label><input type="password" name="token" autocomplete="off">
+      <details class="adv"><summary>Or log in with username / password</summary>
+        <div class="row"><div><label>Username</label><input type="text" name="username" autocomplete="off"></div><div><label>Password</label><input type="password" name="password" autocomplete="off"></div></div>
+      </details>
+      <div class="check"><input type="checkbox" name="verify_tls" id="ocp-tls"><label for="ocp-tls" style="margin:0;color:inherit">Verify TLS certificate</label></div>
+      <details class="adv"><summary>Node SSH enrichment (sockets, disks, NICs on UPI / bare metal)</summary>
+        <div class="check"><input type="checkbox" name="ns_enabled" id="ns-en"><label for="ns-en" style="margin:0;color:inherit">SSH to each node's InternalIP</label></div>
+        <div class="row"><div><label>User</label><input type="text" name="ns_user" value="core"></div><div><label>Port</label><input type="number" name="ns_port" value="22"></div></div>
+        <label>Private key <span class="hint">(paste, or <a href="#" data-keyfile="ns_key">load file</a>)</span></label><textarea name="ns_key" rows="3" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----"></textarea>
+        <label>Bastion / jump host (optional)</label><div class="row"><input type="text" name="ns_jump" placeholder="user@bastion:22"></div>
+      </details>
+      <div class="actions"><button class="btn primary" onclick="runOCP(this)">Discover cluster</button><span class="hint">Tokens are kept in memory only.</span></div>
+    </div>
+
+    <div class="card" id="f-vc">
+      <h2>VMware vCenter</h2>
+      <div class="sub">ESXi hosts (sockets/cores, needed for RHEL Virtual Datacenter sizing) and every VM's guest OS, vCPU, memory, disks and NICs. A read-only role is enough.</div>
+      <div class="row"><div style="flex:3"><label>vCenter host</label><input type="text" name="host" placeholder="vcenter.example.com"></div><div><label>Port</label><input type="number" name="port" value="443"></div></div>
+      <label>Display name (optional)</label><input type="text" name="name" placeholder="DC1-vCenter">
+      <div class="row"><div><label>Username</label><input type="text" name="username" placeholder="readonly@vsphere.local" autocomplete="off"></div><div><label>Password</label><input type="password" name="password" autocomplete="off"></div></div>
+      <div class="check"><input type="checkbox" name="verify_tls" id="vc-tls"><label for="vc-tls" style="margin:0;color:inherit">Verify TLS certificate</label></div>
+      <div class="actions"><button class="btn primary" onclick="runVC(this)">Discover vCenter</button></div>
+    </div>
+
+    <div class="card" id="f-rhv">
+      <h2>Red Hat Virtualization 4.x</h2>
+      <div class="sub">RHV Manager REST API: data centers, clusters, hypervisors (sockets/cores, NICs, RHV-H vs RHEL-H) and every VM's guest OS, vCPU, memory, disks and NICs. A <code>ReadOnlyAdmin</code> user is enough.</div>
+      <label>Manager FQDN or API URL</label><input type="text" name="url" placeholder="rhvm.example.com">
+      <label>Display name (optional)</label><input type="text" name="name" placeholder="RHV-DC2">
+      <div class="row"><div><label>Username <span class="hint">(user@profile)</span></label><input type="text" name="username" placeholder="admin@internal" autocomplete="off"></div><div><label>Password</label><input type="password" name="password" autocomplete="off"></div></div>
+      <div class="check"><input type="checkbox" name="verify_tls" id="rhv-tls"><label for="rhv-tls" style="margin:0;color:inherit">Verify TLS certificate</label></div>
+      <div class="actions"><button class="btn primary" onclick="runRHV(this)">Discover RHV</button></div>
+    </div>
+
+    <div class="card" id="f-rhel">
+      <h2>RHEL hosts (SSH)</h2>
+      <div class="sub">OS release, CPU sockets/cores, memory, disks, NICs, hardware vendor, physical vs virtual and subscription-manager status. Uses <code>sudo -n</code> when available; nothing is changed on the host.</div>
+      <label>Hosts <span class="hint">— one per line: <code>host</code>, <code>user@host:port</code>, optional label after a space. <a href="#" id="hostsFileLink">Load file</a></span></label>
+      <textarea name="hosts" rows="5" placeholder="10.10.1.21&#10;rhel-app01.example.com&#10;admin@rhel-db01:2222  DB tier"></textarea>
+      <input type="file" id="hostsFile" hidden>
+      <div class="row"><div><label>Default user</label><input type="text" name="username" value="root"></div><div><label>Password</label><input type="password" name="password" autocomplete="off"></div></div>
+      <label>Private key <span class="hint">(paste, or <a href="#" data-keyfile="key">load file</a>)</span></label><textarea name="key" rows="3" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----"></textarea>
+      <details class="adv"><summary>Advanced</summary>
+        <div class="row"><div><label>Key passphrase</label><input type="password" name="passphrase"></div><div><label>Parallel sessions</label><input type="number" name="concurrency" value="10" min="1" max="64"></div></div>
+        <label>Bastion / jump host</label><input type="text" name="jump" placeholder="user@bastion:22 (same credentials)">
+        <div class="check"><input type="checkbox" name="sudo" id="rh-sudo" checked><label for="rh-sudo" style="margin:0;color:inherit">Use passwordless sudo for subscription-manager / DMI serial</label></div>
+      </details>
+      <div class="actions"><button class="btn primary" onclick="runRHEL(this)">Discover hosts</button></div>
+    </div>
+  </div>
+  <input type="file" id="keyFile" hidden>
+
+  <div class="jobs">
+    <h3>Collected data</h3>
+    <div class="chips" id="sources"><span class="hint">Nothing collected yet. Run a discovery above or load a saved JSON.</span></div>
+    <h3>Discovery jobs</h3>
+    <div id="jobs"><span class="hint">No jobs run in this session.</span></div>
+  </div>
+</section>
+
+<!-- ============================ SUMMARY ============================ -->
+<section class="view" id="v-summary"><div id="summary"></div></section>
+<section class="view" id="v-ocp"><div id="ocp"></div></section>
+<section class="view" id="v-virt"><div id="virt"></div></section>
+<section class="view" id="v-vc"><div id="vc"></div></section>
+<section class="view" id="v-rhv"><div id="rhv"></div></section>
+<section class="view" id="v-rhel"><div id="rhel"></div></section>
+</main>
+
+<script>
+"use strict";
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const GiB = 1024**3;
+const fmtB = b => { if (!b) return "–"; if (b >= 1024**4) return (b/1024**4).toFixed(2)+" TiB"; return (b/GiB).toFixed(b >= 100*GiB ? 0 : 1)+" GiB"; };
+const gib = b => b ? +(b/GiB).toFixed(1) : 0;
+const spd = m => !m ? "–" : (m >= 1000 ? (m/1000)+" Gb/s" : m+" Mb/s");
+const n0 = v => (v === null || v === undefined || v === "") ? "–" : (typeof v === "number" ? v.toLocaleString(undefined,{maximumFractionDigits:1}) : v);
+const roleBadge = r => `<span class="badge b-${esc(r)}${["Master","Master+Worker","Infra","Storage","Worker"].includes(r)?"":" b-x"}">${esc(r)}</span>`;
+const plat = v => ({none:"Physical", unknown:"Unknown", vmware:"VMware VM", vm:"VM", kvm:"KVM VM", microsoft:"Hyper-V VM", "openshift-virtualization":"OCP Virt VM", rhv:"RHV VM"}[v] || (v ? v+" VM" : "–"));
+const yn = (v, okTxt="yes", noTxt="no") => v ? `<span class="ok">${okTxt}</span>` : `<span class="muted">${noTxt}</span>`;
+
+let A = { meta: {customer: ""}, openshift: [], vcenter: [], rhv: [], rhel: [] };
+const norm = d => ({meta:d.meta||{}, openshift:d.openshift||[], vcenter:d.vcenter||[], rhv:d.rhv||[], rhel:d.rhel||[]});
+const hasData = () => A.openshift.length || A.vcenter.length || A.rhv.length || A.rhel.length;
+let S = null;
+const store = { get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }, set(k,v){ try { localStorage.setItem(k,v); return true; } catch(e){ return false; } } };
+
+/* ---------------- theme & tabs ---------------- */
+(function(){ const t = store.get("rhd-theme"); if (t) document.documentElement.dataset.theme = t; })();
+$("#themeBtn").onclick = () => {
+  const cur = document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const nx = cur === "dark" ? "light" : "dark"; document.documentElement.dataset.theme = nx; store.set("rhd-theme", nx);
+};
+$$("#tabs button").forEach(b => b.onclick = () => showTab(b.dataset.v));
+function showTab(v){ $$("#tabs button").forEach(x => x.classList.toggle("on", x.dataset.v === v)); $$(".view").forEach(x => x.classList.toggle("on", x.id === "v-"+v)); store.set("rhd-tab", v); }
+
+/* ---------------- generic table ---------------- */
+function table(el, {title, cols, rows, expand, filters, csv, foot, maxh}) {
+  const st = { sort: null, dir: 1, q: "", f: {} };
+  const wrap = document.createElement("div"); wrap.className = "tblwrap";
+  const fsel = (filters||[]).map((f,i) => `<select data-f="${i}"><option value="">${esc(f.label)}: all</option>${[...new Set(rows.map(f.get).filter(x=>x!==""&&x!=null))].sort().map(v=>`<option${f.default===v?" selected":""}>${esc(v)}</option>`).join("")}</select>`).join("");
+  (filters||[]).forEach((f,i) => { if (f.default) st.f[i] = f.default; });
+  wrap.innerHTML = `<div class="tbltools"><span class="ttl">${esc(title||"")} <span class="muted" data-cnt></span></span>${fsel}<input type="search" placeholder="Filter…"><button class="btn small" data-csv>CSV</button></div><div class="scroll" ${maxh?`style="max-height:${maxh}"`:""}><table><thead></thead><tbody></tbody><tfoot></tfoot></table></div>`;
+  el.appendChild(wrap);
+  const val = (c, r) => c.get ? c.get(r) : r[c.key];
+  const view = () => {
+    let rs = rows.filter(r => (filters||[]).every((f,i) => !st.f[i] || String(f.get(r)) === st.f[i]));
+    if (st.q) { const q = st.q.toLowerCase(); rs = rs.filter(r => cols.some(c => String(val(c,r) ?? "").toLowerCase().includes(q))); }
+    if (st.sort !== null) { const c = cols[st.sort]; rs = [...rs].sort((a,b) => { const x = val(c,a), y = val(c,b); return (typeof x === "number" && typeof y === "number" ? x - y : String(x??"").localeCompare(String(y??""), undefined, {numeric:true})) * st.dir; }); }
+    return rs;
+  };
+  const draw = () => {
+    const rs = view();
+    $("thead", wrap).innerHTML = "<tr>" + (expand ? "<th></th>" : "") + cols.map((c,i) => `<th class="${c.num?"num":""}" data-i="${i}">${esc(c.label)} <span class="arr">${st.sort===i?(st.dir>0?"▲":"▼"):""}</span></th>`).join("") + "</tr>";
+    $("tbody", wrap).innerHTML = rs.map((r,ri) => "<tr data-r='"+ri+"'>" + (expand ? "<td class='tog'>▸</td>" : "") + cols.map(c => { const v = val(c,r); return `<td class="${c.num?"num":""}">${c.html ? c.html(r) : esc(c.fmt ? c.fmt(v,r) : n0(v))}</td>`; }).join("") + "</tr>").join("") || `<tr><td colspan="${cols.length+(expand?1:0)}" class="muted" style="text-align:center;padding:20px">No rows</td></tr>`;
+    $("[data-cnt]", wrap).textContent = `(${rs.length}${rs.length!==rows.length?" of "+rows.length:""})`;
+    $("tfoot", wrap).innerHTML = foot ? "<tr>" + (expand?"<td></td>":"") + cols.map((c,i) => `<td class="${c.num?"num":""}">${esc(foot(rs, c, i) ?? "")}</td>`).join("") + "</tr>" : "";
+    $$("th[data-i]", wrap).forEach(th => th.onclick = () => { const i = +th.dataset.i; st.dir = st.sort === i ? -st.dir : 1; st.sort = i; draw(); });
+    if (expand) $$("td.tog", wrap).forEach(td => td.onclick = () => {
+      const tr = td.parentElement; const nx = tr.nextElementSibling;
+      if (nx && nx.classList.contains("exp")) { nx.remove(); td.textContent = "▸"; return; }
+      const e = document.createElement("tr"); e.className = "exp"; e.innerHTML = `<td></td><td colspan="${cols.length}">${expand(rs[+tr.dataset.r])}</td>`; tr.after(e); td.textContent = "▾";
+    });
+  };
+  $("input[type=search]", wrap).oninput = e => { st.q = e.target.value; draw(); };
+  $$("select[data-f]", wrap).forEach(s => s.onchange = () => { st.f[s.dataset.f] = s.value; draw(); });
+  $("[data-csv]", wrap).onclick = () => {
+    const rs = view(); const q = v => `"${String(v ?? "").replace(/"/g,'""')}"`;
+    const lines = [cols.map(c => q(c.label)).join(",")].concat(rs.map(r => cols.map(c => q(c.csv ? c.csv(r) : val(c,r))).join(",")));
+    download(new Blob([lines.join("\n")], {type:"text/csv"}), (csv||title||"table").replace(/\W+/g,"_") + ".csv");
+  };
+  draw();
+}
+const sum = (rs, f) => rs.reduce((a, r) => a + (+f(r) || 0), 0);
+const sumFoot = keys => (rs, c, i) => i === 0 ? "Total" : (keys.includes(c.label) ? n0(+sum(rs, r => c.get ? c.get(r) : r[c.key]).toFixed(1)) : "");
+
+function miniTable(title, cols, rows){
+  if (!rows || !rows.length) return `<div><h4>${esc(title)}</h4><div class="muted">No data from available sources.</div></div>`;
+  return `<div><h4>${esc(title)}</h4><table><thead><tr>${cols.map(c=>`<th class="${c[2]?"num":""}">${esc(c[0])}</th>`).join("")}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td class="${c[2]?"num":""}">${esc(c[1](r))}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+}
+const diskCols = [["Device", d=>d.name], ["Size", d=>fmtB(d.size_bytes), 1], ["Model", d=>[d.vendor,d.model].filter(Boolean).join(" ")||"–"], ["Media", d=>d.rotational===true?"HDD":d.rotational===false?"SSD/NVMe":"–"], ["Bus", d=>d.transport||d.type||"–"], ["Serial", d=>d.serial||"–"]];
+const nicCols = [["Interface", n=>n.name], ["MAC", n=>n.mac||"–"], ["Speed", n=>spd(n.speed_mbps), 1], ["State", n=>n.state||"–"], ["Driver/Model", n=>n.driver||n.model||"–"], ["Bond", n=>n.bond||"–"], ["IPv4", n=>n.ipv4||"–"]];
+
+/* ---------------- render ---------------- */
+async function refresh(){
+  $("#customer").value = A.meta.customer || "";
+  $("#c-ocp").textContent = A.openshift.reduce((a,c)=>a+(c.nodes||[]).length,0);
+  $("#c-virt").textContent = A.openshift.reduce((a,c)=>a+((c.virtualization||{}).vms||[]).length,0);
+  $("#c-vc").textContent = A.vcenter.reduce((a,c)=>a+(c.vms||[]).length,0);
+  $("#c-rhv").textContent = A.rhv.reduce((a,c)=>a+(c.vms||[]).length,0);
+  $("#c-rhel").textContent = A.rhel.reduce((a,c)=>a+(c.hosts||[]).length,0);
+  renderSources();
+  persist();
+  try { S = await (await fetch("/api/summary", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(A)})).json(); }
+  catch(e){ S = null; }
+  renderSummary(); renderOCP(); renderVirt(); renderVC(); renderRHV(); renderRHEL();
+}
+function persist(){ const ok = store.set("rhd-assessment", JSON.stringify(A)); if (!ok) console.warn("assessment too large for local storage - use Save JSON"); }
+
+function renderSources(){
+  const chips = [];
+  A.openshift.forEach((c,i) => chips.push([`OpenShift · ${c.name} (${(c.nodes||[]).length} nodes)`, "openshift", i]));
+  A.vcenter.forEach((c,i) => chips.push([`vCenter · ${c.name} (${(c.vms||[]).length} VMs)`, "vcenter", i]));
+  A.rhv.forEach((c,i) => chips.push([`RHV · ${c.name} (${(c.vms||[]).length} VMs)`, "rhv", i]));
+  A.rhel.forEach((c,i) => chips.push([`SSH batch ${i+1} · ${(c.hosts||[]).length} hosts · ${c.discovered_at.slice(0,16).replace("T"," ")}`, "rhel", i]));
+  $("#sources").innerHTML = chips.length ? chips.map(([t,k,i]) => `<span class="chip">${esc(t)}<button title="Remove" onclick="removeSource('${k}',${i})">×</button></span>`).join("") : `<span class="hint">Nothing collected yet. Run a discovery above or load a saved JSON.</span>`;
+}
+window.removeSource = (k, i) => { A[k].splice(i,1); refresh(); };
+
+function kpi(v, l, d, accent){ return `<div class="kpi${accent?" accent":""}"><div class="v">${esc(n0(v))}</div><div class="l">${esc(l)}</div>${d?`<div class="d">${d}</div>`:""}</div>`; }
+
+function renderSummary(){
+  const el = $("#summary");
+  if (!S || !hasData()) { el.innerHTML = `<div class="empty">Run a discovery or load a saved assessment to see the subscription summary.</div>`; return; }
+  const t = S.totals, r = S.rhel;
+  el.innerHTML = `<div class="banner"><b>Indicative sizing only.</b> Counts follow the rules listed under Notes; confirm against the customer's Red Hat agreement before quoting.</div>
+  <h3>OpenShift</h3><div class="kpis">
+    ${kpi(t.ocp_core_pair_subs, "Core-pair subscriptions (virtual workers)", "1 per 2 cores / 4 vCPU", true)}
+    ${kpi(t.ocp_bm_socket_pair_subs, "Socket-pair subscriptions (bare-metal workers)", "1 per 2 sockets, up to 64 cores", true)}
+    ${kpi(t.odf_core_pair_subs, "ODF core-pair subscriptions", "storage-labelled nodes")}
+    ${kpi(t.ocp_unknown_nodes, "Workers not classified physical/virtual", t.ocp_unknown_nodes ? '<span class="warn">add vCenter or node SSH</span>' : "all classified")}
+  </div>
+  <h3>RHEL</h3><div class="kpis">
+    ${kpi(r.total, "RHEL systems (de-duplicated)", Object.entries(r.by_major_version).map(([k,v])=>`RHEL ${esc(k)}: ${v}`).join(" · "))}
+    ${kpi(t.rhel_physical_subs, "Physical: socket-pair subscriptions", `${r.physical.hosts} hosts · ${r.physical.sockets} sockets`, true)}
+    ${kpi(t.rhel_vmware_per_guest_subs, "VMware: per-guest subscriptions", `${r.vmware.vms} powered-on RHEL VMs (2 per sub)`, true)}
+    ${kpi(t.rhel_vmware_vdc_subs, "VMware alternative: Virtual Datacenter", `${r.vmware.vdc_clusters.length} cluster(s) hosting RHEL`)}
+    ${kpi(t.rhel_rhv_per_guest_subs, "RHV: per-guest subscriptions", `${r.rhv.vms} powered-on RHEL VMs (2 per sub)`, true)}
+    ${kpi(t.rhel_rhv_vdc_subs, "RHV alternative: Virtual Datacenter", `${r.rhv.vdc_clusters.length} RHV cluster(s) hosting RHEL`)}
+    ${kpi(t.rhel_other_virtual_subs, "Other hypervisors: per-guest subs", `${r.other_virtual.vms} VMs`)}
+    ${kpi(t.ocpv_rhel_vms, "RHEL VMs on OpenShift Virtualization", "entitlement depends on OCP offering")}
+  </div>${A.rhv.length ? `<h3>Red Hat Virtualization</h3><div class="kpis">
+    ${kpi(t.rhv_hypervisor_socket_pair_subs, "RHV hypervisor socket-pair subscriptions", `${r.rhv.hypervisor_hosts} hosts · ${r.rhv.hypervisor_sockets} sockets`, true)}
+    ${kpi(r.rhv.rhvh_hosts, "RHV-H hosts", `${r.rhv.rhelh_hosts} RHEL-H hosts`)}
+    ${kpi(A.rhv.reduce((a,c)=>a+(c.vms||[]).length,0), "RHV VMs (all OS)", "")}
+  </div>` : ""}<div id="s-tables"></div>
+  <div class="split"><div class="card"><h2>Registration status</h2>${barList(r.registration)}</div><div class="card"><h2>Notes &amp; rules applied</h2><ul class="notes">${S.notes.map(n=>`<li>${esc(n)}</li>`).join("")}</ul></div></div>`;
+  const tl = $("#s-tables");
+  if (S.openshift.length) table(tl, {title:"OpenShift clusters", csv:"ocp_clusters", rows:S.openshift, cols:[
+    {label:"Cluster", key:"name"}, {label:"Version", key:"version"}, {label:"Platform", key:"platform"},
+    {label:"Nodes", num:1, get:c=>Object.values(c.roles).reduce((a,x)=>a+x.nodes,0)},
+    {label:"Master", num:1, get:c=>((c.roles.Master||{}).nodes||0)+((c.roles["Master+Worker"]||{}).nodes||0)},
+    {label:"Infra", num:1, get:c=>(c.roles.Infra||{}).nodes||0}, {label:"Storage", num:1, get:c=>(c.roles.Storage||{}).nodes||0},
+    {label:"Worker", num:1, get:c=>(c.roles.Worker||{}).nodes||0},
+    {label:"Chargeable", num:1, get:c=>c.chargeable.nodes}, {label:"Virt. worker vCPU", num:1, get:c=>c.chargeable.virtual_vcpu},
+    {label:"Core-pair subs", num:1, get:c=>c.chargeable.core_pair_subs}, {label:"BM sockets", num:1, get:c=>c.chargeable.bm_sockets},
+    {label:"BM socket-pair subs", num:1, get:c=>c.chargeable.bm_socket_pair_subs},
+    {label:"ODF subs", num:1, get:c=>c.odf.installed?c.odf.core_pair_subs:"–"},
+    {label:"Virt VMs", num:1, get:c=>c.virtualization.installed?c.virtualization.vms:"–"}, {label:"RHEL VMs", num:1, get:c=>c.virtualization.rhel_vms}],
+    expand: c => `<div class="mini">${miniTable("Node classification", [["Node",n=>n.name],["Role",n=>n.role],["Platform",n=>plat(n.virtualization)],["vCPU",n=>n0(n.vcpu),1],["Counted",n=>n.chargeable?"yes":"no – "+n.reason],["Socket-pair subs",n=>n0(n.socket_pair_subs),1]], c.nodes)}${miniTable("Installed operators", [["Operator", o=>o]], c.operators.map(o=>o))}</div>`});
+  if (r.vmware.vdc_clusters.length) table(tl, {title:"RHEL on VMware: per-guest vs Virtual Datacenter, by vSphere cluster", csv:"rhel_vdc", rows:r.vmware.vdc_clusters, cols:[
+    {label:"vCenter", key:"vcenter"}, {label:"Datacenter", key:"datacenter"}, {label:"Cluster", key:"cluster"}, {label:"ESXi hosts", key:"hosts", num:1},
+    {label:"Sockets", key:"sockets", num:1}, {label:"RHEL VMs", key:"rhel_vms", num:1}, {label:"Per-guest subs", key:"per_guest_subs", num:1}, {label:"VDC subs", key:"vdc_subs", num:1},
+    {label:"Lower unit count", get:x=>x.vdc_subs < x.per_guest_subs ? "VDC" : "Per-guest"}], foot: sumFoot(["ESXi hosts","Sockets","RHEL VMs","Per-guest subs","VDC subs"])});
+  if (r.rhv.vdc_clusters.length) table(tl, {title:"RHEL on RHV: per-guest vs Virtual Datacenter, by RHV cluster", csv:"rhel_rhv_vdc", rows:r.rhv.vdc_clusters, cols:[
+    {label:"RHV", key:"rhv"}, {label:"Data center", key:"datacenter"}, {label:"Cluster", key:"cluster"}, {label:"Hosts", key:"hosts", num:1},
+    {label:"Sockets", key:"sockets", num:1}, {label:"RHEL VMs", key:"rhel_vms", num:1}, {label:"Per-guest subs", key:"per_guest_subs", num:1}, {label:"VDC subs", key:"vdc_subs", num:1},
+    {label:"Lower unit count", get:x=>x.vdc_subs < x.per_guest_subs ? "VDC" : "Per-guest"}], foot: sumFoot(["Hosts","Sockets","RHEL VMs","Per-guest subs","VDC subs"])});
+  table(tl, {title:"RHEL estate (de-duplicated across SSH, vCenter, RHV and OpenShift Virtualization)", csv:"rhel_estate", rows:r.estate,
+    filters:[{label:"Type", get:e=>e.virtual?"Virtual":"Physical"}, {label:"Platform", get:e=>plat(e.platform)}],
+    cols:[{label:"Name", key:"name"}, {label:"Sources", get:e=>e.sources.join(", ")}, {label:"RHEL", key:"os_version"}, {label:"Type", get:e=>e.virtual?"Virtual":"Physical"},
+      {label:"Platform", get:e=>plat(e.platform)}, {label:"Cluster", key:"cluster"}, {label:"Power", key:"power_state"}, {label:"Sockets", key:"sockets", num:1}, {label:"vCPU", key:"vcpu", num:1},
+      {label:"Memory GiB", get:e=>gib(e.memory_bytes), num:1}, {label:"Subscription", key:"subscription"}, {label:"Registered to", key:"registered_to"}]});
+}
+function barList(obj){
+  const tot = Object.values(obj).reduce((a,b)=>a+b,0) || 1;
+  return `<table>${Object.entries(obj).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<tr><td>${esc(k)}</td><td class="num">${v}</td><td style="width:40%"><div class="bar"><i style="width:${100*v/tot}%"></i></div></td></tr>`).join("") || "<tr><td class='muted'>No data</td></tr>"}</table>`;
+}
+
+function renderOCP(){
+  const el = $("#ocp"); el.innerHTML = "";
+  if (!A.openshift.length) { el.innerHTML = `<div class="empty">No OpenShift clusters discovered yet.</div>`; return; }
+  A.openshift.forEach(c => {
+    const box = document.createElement("div");
+    const odf = c.odf || {};
+    box.innerHTML = `<div class="clusterhead"><span class="n">${esc(c.name)}</span><span>OpenShift ${esc(c.version)}</span><span>Platform: ${esc(c.platform||"–")}</span><span>Topology: ${esc(c.topology||"–")}</span><span>Cluster ID: ${esc(c.cluster_id||"–")}</span><span>${esc(c.api_url)}</span>${odf.installed?`<span>ODF raw: ${fmtB(odf.raw_capacity_bytes)} (used ${fmtB(odf.raw_used_bytes)})</span>`:""}<span>Discovered ${esc((c.discovered_at||"").replace("T"," ").slice(0,16))} UTC</span></div>`;
+    el.appendChild(box);
+    // role rollup
+    const roles = {};
+    (c.nodes||[]).forEach(n => { const r = roles[n.role] ||= {role:n.role, nodes:0, vcpu:0, cores:0, mem:0, disk:0, nics:0, phys:0, virt:0, unk:0};
+      r.nodes++; r.vcpu += n.cpu_capacity||0; r.cores += (n.hw||{}).physical_cores||0; r.mem += n.memory_bytes||0; r.disk += n.disk_total_bytes||0; r.nics += n.nic_count||0;
+      n.virtualization==="none" ? r.phys++ : n.virtualization==="unknown" ? r.unk++ : r.virt++; });
+    const order = ["Master","Master+Worker","Infra","Storage","Worker"];
+    table(box, {title:"Capacity by node role", csv:c.name+"_roles", rows:Object.values(roles).sort((a,b)=>(order.indexOf(a.role)+99)%99-(order.indexOf(b.role)+99)%99), cols:[
+      {label:"Role", key:"role", html:r=>roleBadge(r.role)}, {label:"Nodes", key:"nodes", num:1}, {label:"Physical", key:"phys", num:1}, {label:"Virtual", key:"virt", num:1}, {label:"Unknown", key:"unk", num:1},
+      {label:"vCPU / logical CPU", key:"vcpu", num:1}, {label:"Physical cores", key:"cores", num:1, fmt:v=>v||"–"}, {label:"Memory GiB", get:r=>gib(r.mem), num:1}, {label:"Disk GiB", get:r=>gib(r.disk), num:1}, {label:"NICs", key:"nics", num:1}],
+      foot: sumFoot(["Nodes","Physical","Virtual","Unknown","vCPU / logical CPU","Physical cores","Memory GiB","Disk GiB","NICs"])});
+    table(box, {title:"Nodes", csv:c.name+"_nodes", rows:c.nodes||[], filters:[{label:"Role", get:n=>n.role}],
+      cols:[{label:"Node", key:"name"}, {label:"Role", key:"role", html:n=>roleBadge(n.role)}, {label:"Ready", get:n=>n.ready?"Ready":"NotReady", html:n=>n.ready?'<span class="ok">Ready</span>':'<span class="err">NotReady</span>'},
+        {label:"Platform", get:n=>plat(n.virtualization)}, {label:"IP", key:"internal_ip"}, {label:"vCPU", key:"cpu_capacity", num:1},
+        {label:"Sockets", get:n=>(n.hw||{}).sockets, num:1}, {label:"Cores", get:n=>(n.hw||{}).physical_cores, num:1}, {label:"CPU model", get:n=>(n.hw||{}).cpu_model||""},
+        {label:"Memory GiB", get:n=>gib(n.memory_bytes), num:1}, {label:"Disks", get:n=>((n.hw||{}).disks||[]).length, num:1}, {label:"Disk GiB", get:n=>gib(n.disk_total_bytes), num:1},
+        {label:"NICs", key:"nic_count", num:1}, {label:"Max NIC speed", get:n=>Math.max(0,...((n.hw||{}).nics||[]).map(x=>x.speed_mbps||0)), fmt:v=>spd(v), num:1},
+        {label:"Vendor / model", get:n=>[(n.hw||{}).vendor,(n.hw||{}).model].filter(Boolean).join(" ")}, {label:"OS", key:"os_image"}, {label:"HW source", get:n=>((n.hw||{}).sources||[]).join(", ")||"API only"}],
+      foot: sumFoot(["vCPU","Sockets","Cores","Memory GiB","Disks","Disk GiB","NICs"]),
+      expand: n => { const hw = n.hw||{}; return `<div class="hint" style="margin-bottom:8px">Labels: ${esc(n.roles.join(", "))} · Kernel ${esc(n.kernel)} · ${esc(n.runtime)} · Arch ${esc(n.arch)} · Allocatable ${n0(n.cpu_allocatable)} CPU / ${fmtB(n.memory_allocatable_bytes)} · Ephemeral ${fmtB(n.ephemeral_storage_bytes)}${hw.serial?" · Serial "+esc(hw.serial):""}${hw.bmc?" · BMC "+esc(hw.bmc):""}${n.taints.length?" · Taints "+esc(n.taints.join(", ")):""}${hw.ssh_error?` · <span class="err">SSH: ${esc(hw.ssh_error)}</span>`:""}</div><div class="mini">${miniTable("Disks", diskCols, hw.disks)}${miniTable("Network interfaces", nicCols, hw.nics)}</div>`; }});
+    if ((c.operators||[]).length) table(box, {title:"Installed operators", csv:c.name+"_operators", rows:c.operators, maxh:"320px", cols:[
+      {label:"Operator", get:o=>o.display_name||o.name}, {label:"Version", key:"version"}, {label:"Namespace", key:"namespace"}, {label:"Provider", key:"provider"}, {label:"Phase", key:"phase"}]});
+  });
+}
+
+function renderVirt(){
+  const el = $("#virt"); el.innerHTML = "";
+  const rows = []; A.openshift.forEach(c => ((c.virtualization||{}).vms||[]).forEach(v => rows.push({...v, cluster:c.name})));
+  const inst = A.openshift.filter(c => (c.virtualization||{}).installed);
+  if (!A.openshift.length) { el.innerHTML = `<div class="empty">No OpenShift clusters discovered yet.</div>`; return; }
+  el.innerHTML = `<div class="clusterhead">${A.openshift.map(c=>`<span><b>${esc(c.name)}</b>: ${(c.virtualization||{}).installed?"OpenShift Virtualization "+esc(c.virtualization.version):"not installed"}</span>`).join("")}</div>`;
+  if (!inst.length) return;
+  const fam = {}; rows.forEach(v => fam[v.os_family] = (fam[v.os_family]||0)+1);
+  el.insertAdjacentHTML("beforeend", `<div class="kpis">${kpi(rows.length,"Virtual machines")}${kpi(rows.filter(v=>v.running).length,"Running")}${kpi(fam.RHEL||0,"RHEL guests","",true)}${kpi(fam.Windows||0,"Windows guests")}${kpi(sum(rows,v=>v.vcpu),"Total vCPU")}${kpi(gib(sum(rows,v=>v.memory_bytes)),"Memory GiB")}${kpi(rows.filter(v=>!v.guest_agent && v.running).length,"Running without guest agent","OS taken from template label")}</div>`);
+  table(el, {title:"Virtual machines", csv:"ocp_virt_vms", rows, filters:[{label:"Cluster", get:v=>v.cluster}, {label:"OS", get:v=>v.os_family}, {label:"Status", get:v=>v.status}],
+    cols:[{label:"Cluster", key:"cluster"}, {label:"Namespace", key:"namespace"}, {label:"VM", key:"name"}, {label:"Status", key:"status"}, {label:"Node", key:"node"},
+      {label:"OS", key:"os_family"}, {label:"Ver", key:"os_version"}, {label:"Guest OS", key:"os_name"}, {label:"OS source", key:"os_source"},
+      {label:"vCPU", key:"vcpu", num:1}, {label:"Memory GiB", get:v=>gib(v.memory_bytes), num:1}, {label:"Disks", get:v=>v.disks.length, num:1}, {label:"Disk GiB", get:v=>gib(v.disk_total_bytes), num:1},
+      {label:"NICs", get:v=>v.nics.length, num:1}, {label:"IP", get:v=>v.nics.map(n=>n.ipv4).filter(Boolean).join(", ")}],
+    foot: sumFoot(["vCPU","Memory GiB","Disks","Disk GiB","NICs"]),
+    expand: v => `<div class="mini">${miniTable("Disks",[["Volume",d=>d.name],["Source / PVC",d=>d.source],["Size",d=>fmtB(d.size_bytes),1],["Storage class",d=>d.storage_class||"–"]],v.disks)}${miniTable("Network interfaces",[["Name",n=>n.name],["Model",n=>n.model],["Binding",n=>n.binding||"–"],["Network",n=>n.network||"–"],["MAC",n=>n.mac||"–"],["IPv4",n=>n.ipv4||"–"]],v.nics)}</div><div class="hint">CPU topology: ${n0(v.sockets)} socket(s) × ${n0(v.cores)} core(s) × ${n0(v.threads)} thread(s)${v.instancetype?" · "+esc(v.instancetype):""}</div>`});
+}
+
+function renderVC(){
+  const el = $("#vc"); el.innerHTML = "";
+  if (!A.vcenter.length) { el.innerHTML = `<div class="empty">No vCenter discovered yet.</div>`; return; }
+  const hosts = [], vms = [];
+  A.vcenter.forEach(c => { (c.hosts||[]).forEach(h => hosts.push({...h, vc:c.name})); (c.vms||[]).forEach(v => vms.push({...v, vc:c.name})); });
+  el.innerHTML = `<div class="clusterhead">${A.vcenter.map(c=>`<span><b>${esc(c.name)}</b>: ${esc(c.version)} · ${(c.hosts||[]).length} hosts · ${(c.vms||[]).length} VMs · ${c.template_count||0} templates</span>`).join("")}</div>`;
+  const fam = {}; vms.forEach(v => fam[v.os_family] = (fam[v.os_family]||0)+1);
+  const rhelOn = vms.filter(v=>v.os_family==="RHEL"&&v.power_state==="poweredOn").length;
+  el.insertAdjacentHTML("beforeend", `<div class="kpis">${kpi(hosts.length,"ESXi hosts", `${sum(hosts,h=>h.sockets)} sockets · ${sum(hosts,h=>h.cores)} cores`)}${kpi(vms.length,"VMs")}${kpi(fam.RHEL||0,"RHEL VMs",`${rhelOn} powered on`,true)}${kpi(fam.RHCOS||0,"RHCOS VMs","OpenShift nodes")}${kpi((fam.CentOS||0)+(fam["Rocky Linux"]||0)+(fam.AlmaLinux||0)+(fam["Oracle Linux"]||0),"RHEL-compatible (CentOS/Rocky/Alma/OL)","conversion candidates")}${kpi(vms.filter(v=>v.config_mismatch).length,"Guest OS config ≠ tools-reported","review")}</div>`);
+  table(el, {title:"ESXi hosts", csv:"vcenter_hosts", rows:hosts, filters:[{label:"Cluster", get:h=>h.cluster}],
+    cols:[{label:"vCenter", key:"vc"}, {label:"Datacenter", key:"datacenter"}, {label:"Cluster", key:"cluster"}, {label:"Host", key:"name"}, {label:"ESXi", key:"esxi_version"},
+      {label:"Vendor / model", get:h=>`${h.vendor} ${h.model}`}, {label:"CPU model", key:"cpu_model"}, {label:"Sockets", key:"sockets", num:1}, {label:"Cores", key:"cores", num:1}, {label:"Threads", key:"threads", num:1},
+      {label:"Memory GiB", get:h=>gib(h.memory_bytes), num:1}, {label:"NICs", get:h=>h.nics.length, num:1}, {label:"VMs", key:"vm_count", num:1}, {label:"State", get:h=>h.connection_state+(h.maintenance?" (maint.)":"")}],
+    foot: sumFoot(["Sockets","Cores","Threads","Memory GiB","NICs","VMs"]),
+    expand: h => `<div class="mini">${miniTable("Physical NICs", [["vmnic",n=>n.name],["MAC",n=>n.mac],["Speed",n=>spd(n.speed_mbps),1],["Driver",n=>n.driver]], h.nics)}</div>`});
+  table(el, {title:"Virtual machines", csv:"vcenter_vms", rows:vms, filters:[{label:"OS", get:v=>v.os_family, default: fam.RHEL ? "RHEL" : undefined}, {label:"Power", get:v=>v.power_state}, {label:"Cluster", get:v=>v.cluster}],
+    cols:[{label:"VM", key:"name"}, {label:"Power", key:"power_state"}, {label:"OS", key:"os_family"}, {label:"Ver", key:"os_version"}, {label:"Guest OS", key:"os_name"},
+      {label:"Source", key:"os_source"}, {label:"Hostname", key:"hostname"}, {label:"IP", key:"ip"}, {label:"vCPU", key:"vcpu", num:1}, {label:"Memory GiB", get:v=>gib(v.memory_bytes), num:1},
+      {label:"Disks", get:v=>v.disks.length, num:1}, {label:"Disk GiB", get:v=>gib(v.disk_total_bytes), num:1}, {label:"NICs", get:v=>v.nics.length, num:1},
+      {label:"Cluster", key:"cluster"}, {label:"ESXi host", key:"esxi_host"}, {label:"Tools", key:"tools_status"}],
+    foot: sumFoot(["vCPU","Memory GiB","Disks","Disk GiB","NICs"]),
+    expand: v => `<div class="hint" style="margin-bottom:8px">Configured OS: ${esc(v.guest_os_config)} (${esc(v.guest_id_config)}) · Tools-reported: ${esc(v.guest_os_tools||"–")} · HW ${esc(v.hw_version)} · ${n0(v.sockets)} socket(s) × ${n0(v.cores_per_socket)} cores · UUID ${esc(v.uuid)}</div><div class="mini">${miniTable("Virtual disks",[["Disk",d=>d.name],["Size",d=>fmtB(d.size_bytes),1],["Datastore",d=>d.datastore],["Thin",d=>d.thin?"yes":"no"]],v.disks)}${miniTable("Network adapters",[["Adapter",n=>n.name],["Type",n=>n.model],["Network",n=>n.network],["MAC",n=>n.mac],["Connected",n=>n.connected?"yes":"no"],["IPv4",n=>n.ipv4||"–"]],v.nics)}</div>`});
+}
+
+function renderRHV(){
+  const el = $("#rhv"); el.innerHTML = "";
+  if (!A.rhv.length) { el.innerHTML = `<div class="empty">No RHV Manager discovered yet.</div>`; return; }
+  const hosts = [], vms = [], cls = [];
+  A.rhv.forEach(c => { (c.hosts||[]).forEach(h => hosts.push({...h, mgr:c.name})); (c.vms||[]).forEach(v => vms.push({...v, mgr:c.name})); (c.clusters||[]).forEach(x => cls.push({...x, mgr:c.name})); });
+  el.innerHTML = `<div class="clusterhead">${A.rhv.map(c=>`<span><b>${esc(c.name)}</b>: ${esc(c.product)} ${esc(c.version)} · ${(c.hosts||[]).length} hosts · ${(c.vms||[]).length} VMs · discovered ${esc((c.discovered_at||"").replace("T"," ").slice(0,16))} UTC</span>`).join("")}</div>`;
+  const fam = {}; vms.forEach(v => fam[v.os_family] = (fam[v.os_family]||0)+1);
+  const rhel = vms.filter(v=>v.os_family==="RHEL" && !v.hosted_engine);
+  el.insertAdjacentHTML("beforeend", `<div class="kpis">${kpi(hosts.length,"Hypervisor hosts",`${sum(hosts,h=>h.sockets)} sockets · ${sum(hosts,h=>h.cores)} cores`)}${kpi(vms.length,"VMs",`${vms.filter(v=>v.power_state==="poweredOn").length} running`)}${kpi(rhel.length,"RHEL VMs",`${rhel.filter(v=>v.power_state==="poweredOn").length} running · HostedEngine excluded`,true)}${kpi(fam.Windows||0,"Windows VMs")}${kpi((fam.CentOS||0)+(fam["Rocky Linux"]||0)+(fam.AlmaLinux||0)+(fam["Oracle Linux"]||0),"RHEL-compatible (CentOS/Rocky/Alma/OL)","conversion candidates")}${kpi(vms.filter(v=>v.os_source!=="guest-agent"&&v.power_state==="poweredOn").length,"Running without guest agent","OS from configured type")}${kpi(sum(vms,v=>v.vcpu),"Total vCPU")}${kpi(gib(sum(vms,v=>v.memory_bytes)),"VM memory GiB")}</div>`);
+  table(el, {title:"Clusters", csv:"rhv_clusters", rows:cls, cols:[{label:"RHV", key:"mgr"}, {label:"Data center", key:"datacenter"}, {label:"Cluster", key:"cluster"},
+    {label:"Compat. version", key:"compat_version"}, {label:"CPU type", key:"cpu_type"}, {label:"Hosts", key:"hosts", num:1}, {label:"Sockets", key:"sockets", num:1},
+    {label:"Cores", key:"cores", num:1}, {label:"Memory GiB", get:x=>gib(x.memory_bytes), num:1}, {label:"VMs", key:"vms", num:1}],
+    foot: sumFoot(["Hosts","Sockets","Cores","Memory GiB","VMs"])});
+  table(el, {title:"Hypervisor hosts", csv:"rhv_hosts", rows:hosts, filters:[{label:"Cluster", get:h=>h.cluster}, {label:"Type", get:h=>h.type}],
+    cols:[{label:"Host", key:"name"}, {label:"Cluster", key:"cluster"}, {label:"Type", key:"type"}, {label:"Status", key:"status"}, {label:"OS", key:"os"},
+      {label:"Vendor / model", get:h=>`${h.vendor} ${h.model}`}, {label:"Serial", key:"serial"}, {label:"CPU model", key:"cpu_model"},
+      {label:"Sockets", key:"sockets", num:1}, {label:"Cores", key:"cores", num:1}, {label:"Threads", key:"threads", num:1}, {label:"Memory GiB", get:h=>gib(h.memory_bytes), num:1},
+      {label:"NICs", get:h=>h.nics.filter(n=>n.physical).length, num:1}, {label:"Max NIC speed", get:h=>Math.max(0,...h.nics.map(n=>n.speed_mbps||0)), fmt:v=>spd(v), num:1},
+      {label:"Running VMs", key:"vms_active", num:1}, {label:"HE host", get:h=>h.hosted_engine?"yes":""}],
+    foot: sumFoot(["Sockets","Cores","Threads","Memory GiB","NICs","Running VMs"]),
+    expand: h => `<div class="hint" style="margin-bottom:8px">Address ${esc(h.address)} · ${esc(h.datacenter)} · SPM ${esc(h.spm||"–")} · Schedulable memory ${fmtB(h.max_sched_memory_bytes)}</div><div class="mini">${miniTable("Network interfaces", [["Interface",n=>n.name],["MAC",n=>n.mac||"–"],["Speed",n=>spd(n.speed_mbps),1],["State",n=>n.state||"–"],["Bond",n=>n.bond||"–"],["Network",n=>n.network||"–"],["IPv4",n=>n.ipv4||"–"],["MTU",n=>n0(n.mtu),1]], h.nics)}</div>`});
+  table(el, {title:"Virtual machines", csv:"rhv_vms", rows:vms, filters:[{label:"OS", get:v=>v.os_family, default: fam.RHEL ? "RHEL" : undefined}, {label:"Status", get:v=>v.status}, {label:"Cluster", get:v=>v.cluster}],
+    cols:[{label:"VM", key:"name", html:v=>esc(v.name)+(v.hosted_engine?' <span class="badge b-x">HostedEngine</span>':"")}, {label:"Status", key:"status"}, {label:"OS", key:"os_family"}, {label:"Ver", key:"os_version"},
+      {label:"Guest OS", key:"os_name"}, {label:"Source", key:"os_source"}, {label:"FQDN", key:"hostname"}, {label:"IP", key:"ip"},
+      {label:"vCPU", key:"vcpu", num:1}, {label:"Memory GiB", get:v=>gib(v.memory_bytes), num:1}, {label:"Disks", get:v=>v.disks.length, num:1},
+      {label:"Disk GiB", get:v=>gib(v.disk_total_bytes), num:1}, {label:"Used GiB", get:v=>gib(v.disk_actual_bytes), num:1}, {label:"NICs", get:v=>v.nics.length, num:1},
+      {label:"Cluster", key:"cluster"}, {label:"Host", key:"host"}],
+    foot: sumFoot(["vCPU","Memory GiB","Disks","Disk GiB","Used GiB","NICs"]),
+    expand: v => `<div class="hint" style="margin-bottom:8px">Configured OS type: ${esc(v.os_type_config)}${v.config_mismatch?' <span class="warn">(differs from guest agent)</span>':""}${v.kernel?" · Kernel "+esc(v.kernel):""} · Topology ${v.sockets} socket(s) × ${v.cores_per_socket} core(s) × ${v.threads_per_core} thread(s) · Guaranteed memory ${fmtB(v.memory_guaranteed_bytes)} · Type ${esc(v.vm_type)}${v.description?" · "+esc(v.description):""}</div><div class="mini">${miniTable("Disks",[["Disk",d=>d.name],["Provisioned",d=>fmtB(d.size_bytes),1],["Used",d=>fmtB(d.actual_bytes),1],["Interface",d=>d.interface],["Format",d=>d.format+(d.thin?" (thin)":"")],["Storage domain",d=>d.storage_domain||d.storage_type],["Boot",d=>d.bootable?"yes":""]],v.disks)}${miniTable("Network interfaces",[["NIC",n=>n.name],["Model",n=>n.model],["Network",n=>n.network||"–"],["Profile",n=>n.profile||"–"],["MAC",n=>n.mac],["Linked",n=>n.linked?"yes":"no"],["IPv4",n=>n.ipv4||"–"]],v.nics)}</div>`});
+}
+
+function renderRHEL(){
+  const el = $("#rhel"); el.innerHTML = "";
+  const hosts = []; A.rhel.forEach(b => (b.hosts||[]).forEach(h => hosts.push(h)));
+  if (!hosts.length) { el.innerHTML = `<div class="empty">No hosts discovered over SSH yet.</div>`; return; }
+  const ok = hosts.filter(h=>h.status!=="error"), phys = ok.filter(h=>!h.is_virtual);
+  el.innerHTML = `<div class="kpis">${kpi(hosts.length,"Hosts scanned")}${kpi(ok.length,"Reachable", hosts.length-ok.length?`<span class="err">${hosts.length-ok.length} failed</span>`:"")}${kpi(ok.filter(h=>h.os_family==="RHEL").length,"RHEL","",true)}${kpi(phys.length,"Physical",`${sum(phys,h=>(h.cpu||{}).sockets)} sockets`)}${kpi(ok.length-phys.length,"Virtual")}${kpi(ok.filter(h=>/current|registered|disabled/i.test((h.subscription||{}).overall_status)).length,"Registered / SCA","subscription-manager")}</div>`;
+  table(el, {title:"Hosts", csv:"rhel_hosts", rows:hosts, filters:[{label:"Status", get:h=>h.status}, {label:"OS", get:h=>h.os_family||""}, {label:"Type", get:h=>h.status==="error"?"":(h.is_virtual?"Virtual":"Physical")}],
+    cols:[{label:"Target", key:"target"}, {label:"Status", key:"status", html:h=>`<span class="${h.status==="ok"?"ok":h.status==="error"?"err":"warn"}">${esc(h.status)}</span>`},
+      {label:"Hostname", key:"hostname"}, {label:"OS", get:h=>h.os_name||h.error||""}, {label:"Type", get:h=>h.status==="error"?"":(h.is_virtual?"Virtual ("+h.virtualization+")":"Physical")},
+      {label:"Vendor / model", get:h=>h.hardware?`${h.hardware.vendor} ${h.hardware.model}`:""}, {label:"Sockets", get:h=>(h.cpu||{}).sockets, num:1},
+      {label:"Cores", get:h=>(h.cpu||{}).physical_cores, num:1}, {label:"Logical CPU", get:h=>(h.cpu||{}).logical_cpus, num:1},
+      {label:"Memory GiB", get:h=>gib(h.memory_bytes), num:1}, {label:"Disks", get:h=>(h.disks||[]).length, num:1}, {label:"Disk GiB", get:h=>gib(h.disk_total_bytes), num:1},
+      {label:"NICs", get:h=>(h.nics||[]).filter(n=>n.physical).length, num:1}, {label:"Subscription", get:h=>(h.subscription||{}).overall_status||""}, {label:"Registered to", get:h=>(h.subscription||{}).registered_to||""}],
+    foot: sumFoot(["Sockets","Cores","Logical CPU","Memory GiB","Disks","Disk GiB","NICs"]),
+    expand: h => h.status==="error" ? `<span class="err">${esc(h.error)}</span>` : `<div class="hint" style="margin-bottom:8px">Kernel ${esc(h.kernel)} · ${esc(h.arch)} · CPU ${esc((h.cpu||{}).model)} (${n0((h.cpu||{}).sockets)}×${n0((h.cpu||{}).cores_per_socket)}c×${n0((h.cpu||{}).threads_per_core)}t) · Serial ${esc((h.hardware||{}).serial||"–")} · BIOS ${esc((h.hardware||{}).bios||"–")} · Uptime ${n0(h.uptime_days)} d · SSH ${esc(h.ssh_user_info)} · Insights ${esc(h.insights)}${(h.addons||[]).length?" · Add-ons: "+esc(h.addons.join(", ")):""}${(h.subscription||{}).sca?" · Simple Content Access":""}</div><div class="mini">${miniTable("Disks", diskCols, h.disks)}${miniTable("Network interfaces", nicCols, h.nics)}${miniTable("Consumed subscriptions",[["Name",s=>s["Subscription Name"]||""],["SKU",s=>s.SKU||""],["Contract",s=>s.Contract||""],["Ends",s=>s.Ends||""]],(h.subscription||{}).consumed)}</div>`});
+}
+
+/* ---------------- jobs ---------------- */
+const form = id => { const o = {}; $$(`#${id} [name]`).forEach(i => o[i.name] = i.type === "checkbox" ? i.checked : i.value.trim()); return o; };
+const parseJump = s => { if (!s) return null; let user = "", host = s, port = 22; if (host.includes("@")) [user, host] = host.split("@"); if (host.includes(":")) { [host, port] = host.split(":"); } return {host, user, port:+port}; };
+
+function runOCP(btn){
+  const f = form("f-ocp");
+  if (!f.api_url) return alert("Enter the OpenShift API URL");
+  if (!f.token && !f.username) return alert("Enter a bearer token or username/password");
+  const p = {api_url:f.api_url, name:f.name, token:f.token, username:f.username, password:f.password, verify_tls:f.verify_tls,
+    node_ssh: f.ns_enabled ? {enabled:true, user:f.ns_user, port:f.ns_port, key:f.ns_key, jump: parseJump(f.ns_jump)} : null};
+  startJob("openshift", p, f.name || f.api_url, btn);
+}
+function runVC(btn){
+  const f = form("f-vc");
+  if (!f.host || !f.username) return alert("Enter vCenter host and credentials");
+  startJob("vcenter", {host:f.host, port:f.port, name:f.name, username:f.username, password:f.password, verify_tls:f.verify_tls}, f.name || f.host, btn);
+}
+function runRHV(btn){
+  const f = form("f-rhv");
+  if (!f.url || !f.username) return alert("Enter the RHV Manager and credentials (user@profile)");
+  startJob("rhv", {url:f.url, name:f.name, username:f.username, password:f.password, verify_tls:f.verify_tls}, f.name || f.url, btn);
+}
+function runRHEL(btn){
+  const f = form("f-rhel");
+  if (!f.hosts) return alert("Enter at least one host");
+  if (!f.password && !f.key) return alert("Enter a password or private key");
+  const j = parseJump(f.jump); if (j) { j.password = f.password; j.key = f.key; j.passphrase = f.passphrase; }
+  const n = f.hosts.split("\n").filter(l => l.trim() && !l.trim().startsWith("#")).length;
+  startJob("rhel", {hosts:f.hosts, username:f.username, password:f.password, key:f.key, passphrase:f.passphrase, concurrency:f.concurrency, sudo:f.sudo, jump:j}, `${n} host(s)`, btn);
+}
+
+async function startJob(type, params, label, btn){
+  btn && (btn.disabled = true);
+  try {
+    const r = await fetch("/api/jobs", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({type, params})});
+    if (!r.ok) throw new Error(await r.text());
+    const {id} = await r.json();
+    const box = document.createElement("div"); box.className = "job";
+    box.innerHTML = `<div class="jh"><span class="spin"></span><span class="t">${esc({openshift:"OpenShift",vcenter:"vCenter",rhv:"RHV",rhel:"RHEL SSH"}[type])}</span><span>${esc(label)}</span><span class="muted st">running…</span></div><pre></pre>`;
+    const jobs = $("#jobs"); if (!jobs.querySelector(".job")) jobs.innerHTML = ""; jobs.prepend(box);
+    $(".jh", box).onclick = () => { const pre = $("pre", box); pre.style.display = pre.style.display === "none" ? "" : "none"; };
+    let since = 0;
+    const tick = async () => {
+      let d; try { d = await (await fetch(`/api/jobs/${id}?since=${since}`)).json(); } catch(e) { setTimeout(tick, 2000); return; }
+      since += d.log.length;
+      const pre = $("pre", box);
+      d.log.forEach(l => pre.insertAdjacentHTML("beforeend", `<span class="${l.level}">[${l.t}] ${esc(l.msg)}</span>\n`));
+      pre.scrollTop = pre.scrollHeight;
+      if (d.status === "running") { setTimeout(tick, 1000); return; }
+      $(".spin", box).outerHTML = d.status === "done" ? '<span class="ok">✔</span>' : '<span class="err">✖</span>';
+      $(".st", box).textContent = d.status === "done" ? "complete" : d.error;
+      btn && (btn.disabled = false);
+      if (d.status === "done" && d.result) merge(type, d.result);
+    };
+    tick();
+  } catch(e) { alert("Failed to start discovery: " + e.message); btn && (btn.disabled = false); }
+}
+function merge(type, res){
+  if (type === "openshift") { const i = A.openshift.findIndex(c => c.api_url === res.api_url); i >= 0 ? A.openshift[i] = res : A.openshift.push(res); }
+  else if (type === "vcenter") { const i = A.vcenter.findIndex(c => c.host === res.host); i >= 0 ? A.vcenter[i] = res : A.vcenter.push(res); }
+  else if (type === "rhv") { const i = A.rhv.findIndex(c => c.url === res.url); i >= 0 ? A.rhv[i] = res : A.rhv.push(res); }
+  else A.rhel.push(res);
+  refresh();
+}
+
+/* ---------------- files ---------------- */
+function download(blob, name){ const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();}, 500); }
+const stamp = () => new Date().toISOString().slice(0,10);
+function saveJSON(){ A.meta.customer = $("#customer").value; A.meta.saved = new Date().toISOString(); download(new Blob([JSON.stringify(A, null, 1)], {type:"application/json"}), `rh-discovery-${(A.meta.customer||"assessment").replace(/\W+/g,"_")}-${stamp()}.json`); }
+async function exportXlsx(){
+  A.meta.customer = $("#customer").value;
+  if (!hasData()) return alert("Nothing to export yet");
+  const r = await fetch("/api/export/xlsx", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(A)});
+  if (!r.ok) return alert("Export failed: " + await r.text());
+  download(await r.blob(), `rh-discovery-${(A.meta.customer||"assessment").replace(/\W+/g,"_")}-${stamp()}.xlsx`);
+}
+$("#loadFile").onchange = e => { const f = e.target.files[0]; if (!f) return; f.text().then(t => { try { const d = JSON.parse(t); A = norm(d); refresh(); showTab("summary"); } catch(err){ alert("Not a valid assessment JSON: " + err.message); } }); e.target.value = ""; };
+$("#customer").onchange = e => { A.meta.customer = e.target.value; persist(); };
+let keyTarget = null;
+$$("[data-keyfile]").forEach(a => a.onclick = ev => { ev.preventDefault(); keyTarget = a.dataset.keyfile; $("#keyFile").click(); });
+$("#keyFile").onchange = e => { const f = e.target.files[0]; if (f) f.text().then(t => { $(`[name=${keyTarget}]`).value = t; }); e.target.value = ""; };
+$("#hostsFileLink").onclick = ev => { ev.preventDefault(); $("#hostsFile").click(); };
+$("#hostsFile").onchange = e => { const f = e.target.files[0]; if (f) f.text().then(t => { $("#f-rhel [name=hosts]").value = t; }); e.target.value = ""; };
+
+/* ---------------- boot ---------------- */
+(async function(){
+  try { const s = store.get("rhd-assessment"); if (s) { A = norm(JSON.parse(s)); } } catch(e){}
+  const tab = store.get("rhd-tab"); if (tab && $("#v-"+tab)) showTab(tab);
+  try {
+    const h = await (await fetch("/api/health")).json();
+    const miss = Object.entries(h.modules).filter(([k,v]) => !v).map(([k]) => k);
+    if (miss.length) $("#v-discover").insertAdjacentHTML("afterbegin", `<div class="banner">Missing Python modules: <b>${esc(miss.join(", "))}</b> — run <code>pip install -r requirements.txt</code>. Related discovery types will fail until installed.</div>`);
+  } catch(e) {
+    $("#v-discover").insertAdjacentHTML("afterbegin", `<div class="banner">The discovery service is not reachable. Start it with <code>python3 server.py</code> and open <code>http://127.0.0.1:8088</code>. Saved JSON can still be viewed.</div>`);
+  }
+  refresh();
+})();
+</script>
+</body>
+</html>
